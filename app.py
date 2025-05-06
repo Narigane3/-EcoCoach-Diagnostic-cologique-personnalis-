@@ -2,11 +2,11 @@ import os
 from dotenv import load_dotenv
 
 import streamlit as st
-import pandas as pd              # ← NEW
-import numpy as np               # ← NEW
-import matplotlib.pyplot as plt  # ← NEW
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
-from mistralai import Mistral     # SDK v2+
+from mistralai import Mistral
 
 # ------------------------------------------------------------------ #
 # Initialisation Mistral
@@ -19,7 +19,7 @@ if not api_key:
     st.stop()
 
 client = Mistral(api_key=api_key)
-MODEL_ID = "mistral-small-latest"   # alias stable recommandé   [oai_citation:0‡Mistral AI Documentation](https://docs.mistral.ai/getting-started/clients/)
+MODEL_ID = "mistral-small-latest"
 
 # ------------------------------------------------------------------ #
 # Barème éco (1 = très écolo ; 3 = impact élevé)
@@ -33,7 +33,6 @@ SCORE_MAP = {
 }
 
 def calc_scores(answers: dict) -> dict:
-    """Transforme les réponses en scores numériques dict(cat -> int)."""
     return {k: SCORE_MAP[k][answers[k]] for k in answers}
 
 # ------------------------------------------------------------------ #
@@ -56,7 +55,7 @@ def get_mistral_response(answers: dict) -> str:
             model=MODEL_ID,
             messages=[
                 {"role": "system", "content": "Tu es un assistant écologique bienveillant."},
-                {"role": "user", "content": user_prompt},
+                {"role": "user",   "content": user_prompt},
             ],
         )
         return resp.choices[0].message.content.strip()
@@ -71,46 +70,49 @@ st.set_page_config(page_title="EcoCoach Mistral", layout="centered")
 st.title("🌱 EcoCoach – Diagnostic écologique (avec Mistral)")
 st.caption("Réponds aux questions pour analyser ton profil et recevoir des conseils personnalisés.")
 
+PH = "— Sélectionner —"   # ⟵ placeholder neutre
+
 with st.form("eco_form"):
-    chauffage = st.selectbox("1. Température du chauffage ?", ["≤ 19 °C", "20-21 °C", "≥ 22 °C"])
-    veille     = st.selectbox("2. Appareils laissés en veille ?", ["Jamais", "Parfois", "Toujours"])
-    eclairage  = st.selectbox("3. Type d’éclairage ?", ["LED", "Basse consommation", "Classique"])
-    transport  = st.selectbox("4. Transport principal ?", ["Vélo / marche", "Transports en commun", "Voiture"])
-    recyclage  = st.selectbox("5. Tu recycles ?", ["Oui", "Parfois", "Non"])
+    chauffage = st.selectbox("1. Température du chauffage ?", [PH, "≤ 19 °C", "20-21 °C", "≥ 22 °C"])
+    veille     = st.selectbox("2. Appareils laissés en veille ?", [PH, "Jamais", "Parfois", "Toujours"])
+    eclairage  = st.selectbox("3. Type d’éclairage ?", [PH, "LED", "Basse consommation", "Classique"])
+    transport  = st.selectbox("4. Transport principal ?", [PH, "Vélo / marche", "Transports en commun", "Voiture"])
+    recyclage  = st.selectbox("5. Tu recycles ?", [PH, "Oui", "Parfois", "Non"])
     submitted  = st.form_submit_button("Analyser")
 
-# ------------------------------------------------------------------ #
-# Résultats + graphiques
-# ------------------------------------------------------------------ #
 if submitted:
-    user_data = {
+    # --- Validation simple --------------------------------------------------
+    selections = {
         "chauffage": chauffage,
         "veille": veille,
         "eclairage": eclairage,
         "transport": transport,
         "recyclage": recyclage,
     }
+    if any(v == PH for v in selections.values()):
+        st.warning("⚠️ Merci de sélectionner une option pour **toutes** les questions.")
+        st.stop()
 
-    # --- 1) Conseils IA
+    # --- 1) Conseils IA ------------------------------------------------------
     st.subheader("🔍 Analyse Mistral en cours…")
     with st.spinner("Génération des conseils écologiques…"):
-        result = get_mistral_response(user_data)
+        result = get_mistral_response(selections)
 
     if result:
         st.success("✅ Résultat généré par Mistral :")
         st.markdown(result)
 
-    # --- 2) Scoring + bar chart
-    scores = calc_scores(user_data)
+    # --- 2) Scoring + bar chart ---------------------------------------------
+    scores = calc_scores(selections)
     score_df = pd.DataFrame.from_dict(scores, orient="index", columns=["Score"])
     st.subheader("📊 Tes scores par catégorie (1 = écolo, 3 = impact élevé)")
-    st.bar_chart(score_df, use_container_width=True)   # streamlit sugar API   [oai_citation:1‡Streamlit Docs](https://docs.streamlit.io/develop/api-reference/charts/st.bar_chart?utm_source=chatgpt.com)
+    st.bar_chart(score_df, use_container_width=True)
 
-    # --- 3) Radar global (optionnel)
+    # --- 3) Radar global -----------------------------------------------------
     with st.expander("📌 Voir un radar global"):
         categories = list(scores.keys())
         values = list(scores.values())
-        values.append(values[0])            # boucle pour fermer le polygone
+        values.append(values[0])
         angles = np.linspace(0, 2*np.pi, len(categories) + 1)
 
         fig = plt.figure()
