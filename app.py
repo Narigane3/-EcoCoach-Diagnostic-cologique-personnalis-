@@ -73,14 +73,14 @@ st.set_page_config(page_title="ÉcoConso Mistral", layout="centered")
 st.title("🌱 ÉcoConso – Diagnostic écologique (avec Mistral)")
 st.caption("Réponds aux questions pour analyser ton profil et recevoir des conseils personnalisés.")
 
-PH = "Sélectionner une option…"
+DEFAULT_OPTION = "Sélectionner une option…"
 
 with st.form("eco_form"):
-    chauffage = st.selectbox("1. Température du chauffage ?", [PH, "≤ 19 °C", "20-21 °C", "≥ 22 °C"])
-    veille = st.selectbox("2. Appareils laissés en veille ?", [PH, "Jamais", "Parfois", "Toujours"])
-    eclairage = st.selectbox("3. Type d’éclairage ?", [PH, "LED", "Basse consommation", "Classique"])
-    transport = st.selectbox("4. Transport principal ?", [PH, "Vélo / marche", "Transports en commun", "Voiture"])
-    recyclage = st.selectbox("5. Tu recycles ?", [PH, "Oui", "Parfois", "Non"])
+    chauffage = st.selectbox("1. Température du chauffage ?", [DEFAULT_OPTION, "≤ 19 °C", "20-21 °C", "≥ 22 °C"])
+    veille = st.selectbox("2. Appareils laissés en veille ?", [DEFAULT_OPTION, "Jamais", "Parfois", "Toujours"])
+    eclairage = st.selectbox("3. Type d’éclairage ?", [DEFAULT_OPTION, "LED", "Basse consommation", "Classique"])
+    transport = st.selectbox("4. Transport principal ?", [DEFAULT_OPTION, "Vélo / marche", "Transports en commun", "Voiture"])
+    recyclage = st.selectbox("5. Tu recycles ?", [DEFAULT_OPTION, "Oui", "Parfois", "Non"])
     submitted = st.form_submit_button("Analyser")
 
 if submitted:
@@ -92,7 +92,7 @@ if submitted:
         "transport": transport,
         "recyclage": recyclage,
     }
-    if any(v == PH for v in selections.values()):
+    if any(v == DEFAULT_OPTION for v in selections.values()):
         st.warning("⚠️ Merci de sélectionner une option pour **toutes** les questions.")
         st.stop()
 
