@@ -6,9 +6,15 @@ personnalisés générés par l'IA de Mistral.
 ## 📦 Prérequis
 
 - Python 3.9 ou supérieur
+
+### 📦 Dépendances
+
 - Streamlit
 - Mistral AI
 - Python-dotenv
+- Pandas
+- NumPy
+- Matplotlib
 
 ## 🚀 Installation
 
